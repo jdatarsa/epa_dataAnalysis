@@ -2,6 +2,7 @@
 # 3.a Packages and Data ####
 rm(list=ls()) 
 library(epiR); library(ggplot2); library(scales); library(zoo); library(dplyr)
+
 #We're going to make use of the epiR package and use Nthiwa et al. to estimate measures of Frequency
 # The dataset is in Excel - for this we use a readxl package
 
@@ -18,6 +19,8 @@ str(df)
 ### Keep temp file in case ###
 dfTemp = df
 #df = dfTemp
+nthiwa_kenya_seroprev <- read_excel("D:/OneDrive/jDATA/git/epa_dataAnalysis/coursematerial/tabular/nthiwa_kenya_seroprev.xlsx")
+getwd()
 
 # 3.1 Exploring the initial results and dealing with some data issues ####
 #3.1.1 - Total tested ####
@@ -25,6 +28,9 @@ dfTemp = df
 
 #3.1.2 - Total herds tested ####
 (N.herds.tested <- length(unique(df$hse_id)))
+
+length(unique(df$herd_no))
+head(df)
 
 #3.1.3 - task - Have a look at the [herd_no] column - can you find the missing herd? ####
 str(df)
@@ -37,6 +43,7 @@ min(df$herd_no)
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
 dfherd.temp <- unique(df$herd_no) #create a temporary dataset called dfherd.temp of the unique herd_no
+class(dfherd.temp)
 length(dfherd.temp)
 
 (temp = data.frame(herd = c(1:390))) #create a fake dataset of all herds through 390
@@ -67,6 +74,7 @@ levels(df$anim_sex)
 levels(df$anim_sex) = c("male","female")
 (prop.table(table(df$anim_sex))) # another example of the benefits of factorization in R
 
+table(df$fmd_exp_st,df$study_str, df$anim_sex)
 
 #3.1.4 - simple proportion in R - Apparent prevalence at Animal Level ####
 str(df)
@@ -90,8 +98,8 @@ D <- 0.1 * (3 - 1) + 1; D
 
 #3.1.4a - Prevalence calculation - Based on design effect ####
 epi.conf(as.matrix(cbind(sum(df$fmd_exp_st), N.tested[1])), 
-         ctype = "agresti", 
-         method = "wilson", 
+         ctype = "prevalence", 
+         method = "fleiss", 
          conf.level = 0.95,
          design = D,
          N = 10000000) * 100 # here make the overarching population large
@@ -109,19 +117,30 @@ epi.conf(as.matrix(cbind(sum(df$fmd_exp_st), N.tested[1])),
 #sensitivity in parallel can be estimated by Se1 + Se2 - (Se1*Se2)
 
 #Task create a function for this
-#SeParrTwoTest = ??
-#SpParrTwoTest = ??
+SeParrTwoTest <- function(Se1, Se2){
+  Se1 + Se2 - (Se1*Se2)
+}
+
+SpParrTwoTest = function(Sp1, Sp2){
+  Sp1 * Sp2
+}
 
 # True prevalence estimates
-epi.prev(pos = sum(df$fmd_exp_st), tested = N.tested, 
+epi.prev(pos = sum(df$fmd_exp_st), 
+         tested = N.tested, 
          se = SeParrTwoTest(0.864, 0.864), 
-         sp = SpParrTwoTest(0.981, 0.974), method = "wilson",
-         units = 100, conf.level = 0.95)
+         sp = SpParrTwoTest(0.981, 0.974), 
+         method = "wilson",
+         units = 100, 
+         conf.level = 0.95)
 
 #you'll see the slight difference in AP estimates given that no design effect was included
 
 # 3.1.5 - zonal differences in prevalence ####
-df %>% group_by(study_str) %>% summarise(sum(fmd_exp_st)/n()) #check table 1 to adjust factor levels
+df %>% 
+  group_by(study_str) %>% 
+  summarise(sum(fmd_exp_st)/n()) #check table 1 to adjust factor levels
+
 #adjust factor levels
 class(df$study_str)
 df$study_str <- factor(df$study_str)
@@ -129,6 +148,9 @@ levels(df$study_str)
 levels(df$study_str) <- c("Zone 3", "Zone 2","Zone 1")
 df %>% group_by(study_str) %>% summarise(prev = sum(fmd_exp_st)/n())
 
+# df$fmd_exp_st <- factor(df$fmd_exp_st)
+# levels(df$fmd_exp_st)
+# levels(df$fmd_exp_st) <- c("FMD_Neg","FMD_Pos")
 # Using the epi.conf function again to establish realistic 95% confidence intervals
 df.zone = table(df$study_str, df$fmd_exp_st)
 
@@ -143,6 +165,10 @@ epi.conf(as.matrix(cbind(df.zone[,2], rowSums(df.zone))),
 # Here vectors are required lets try using a for loop
 
 outputList = list()
+
+for(i in c("j","p","i","s")){
+  print(paste0(i," is here"))
+}
 
 for (i in unique(df$study_str)){
   datatemp = df[df$study_str == i,]

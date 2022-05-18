@@ -1,6 +1,5 @@
 # Demo 1.1 ####
 getwd()
-rm(list=ls()) 
 #Working directory is where a project is based
 
 # 1.2 Introduction to R ####
@@ -9,8 +8,16 @@ rm(list=ls())
 (8*4)^2
 x = (8*4)^2
 x
+y = 99
+z <- 765
+# shortcut for allocation - ALT--
+p <- 32
 print(x)
-
+x * y
+15 <- 199
+15 == 199
+isjohnthesameaspearl <- "john" == "pearl"
+rm(list=ls()) 
 # 1.2.2 Assigning values and datatypes in R ####
 # 1.2.2.1 Vectors ####
 quantity <- c(12,43,64,87,98,12,23,67,12,34,21) # c=concatenate into a vector; use = or <- (ALT -) to assign in R
@@ -23,17 +30,19 @@ summary(quantity)
 
 # Example: Diagnostic test results for 3 animals on multiple days
 # Data are Ct values for a test that is performed on these animals
-test1 <- c(23,40,19)
+(test1 <- c(23,40,19))
 (test2 <- c(29,40,26)) #notice putting code in brackets prints it out after
 
 # you can name these vectors - lets make a vector of names and assign them
 animalnames = c("Animal 1", "Animal 2", "Animal 3")
+class(animalnames)
 # assign names to test1 vector
 names(test1) = animalnames
 names(test2) = animalnames
 test1
 test2
 summary(test1) # it is still a numeric vector
+class(test1)
 boxplot(c(test1,test2))
 summary(c(test1,test2))
 
@@ -80,8 +89,8 @@ names(test1) = animalnames
 names(test2) = animalnames
 
 #animal 2
-test1[3]
-test2[3]
+test1[2]
+test2[2]
 test1[c(1,2)]
 
 #or
@@ -89,7 +98,7 @@ test1["Animal 2"] # advantage of using Names
 
 # selecting components by comparison
 test1>23 # establish all test one values above 23
-sum(test1>23) # nice trick in R to count - TRUE = 1; FALSE = 0
+sum(test1<=23) # nice trick in R to count - TRUE = 1; FALSE = 0
 filterCt <- test1>23 # use this as a filter
 test1[filterCt]
 
@@ -124,6 +133,7 @@ alltest.matrix[3,1]
 alltest.matrix["test3","Animal 1"] #same outcome
 # Animal 3's results
 alltest.matrix[,3] # or
+alltest.matrix[,]
 alltest.matrix[,"Animal 3"]
 
 #Arithmetic works for matrix items
@@ -141,6 +151,7 @@ hi.matrix
 (breed = c("Tswana", "Tswana", "Africander", "Tuli", "Tuli", "Tswana"))
 factor_breed = factor(breed)
 factor_breed
+summary(factor_breed)
 
 #ordered factors
 heat_tol <-c("med", "med", "high", "low","low", "med")
@@ -164,13 +175,17 @@ factor_heat_tol[1] > factor_heat_tol[5]
 # very commonly used as it is a good stepping stone from software such as MS Excel
 # lets take a step back and import some data into R - realistically you wont be making your own
 
+rm(list=ls())
 #1.2.2.4.1 - accessing data in R - option 1 - read directly from CSV online ####
 wahid_species <- read.csv("https://epicpd.jshiny.com/jdata/epicpd/botswanaVS/coursematerial/tabular/wahid_botswana_specieslevel.csv")
 head(wahid_species)
+tail(wahid_species)
 View(wahid_species)
 class(wahid_species)
 str(wahid_species) #structure
 summary(wahid_species)
+
+wahid_species$spicieName = factor(wahid_species$spicieName)
 
 #continue our exploration of data frames
 # extracting rows and columns as above
@@ -185,7 +200,9 @@ wahid_species$totalNcase
 #or
 subset(wahid_species, subset = spicieName == 'Cattle')
 subset(wahid_species, subset = spicieName == 'Cattle')$oieReference 
-wahid_species_df = ?
+
+sum(wahid_species$totalNcase)
+
 #1.2.2.5 Lists ####
 #Very efficient way of storing and manipulating data but does sometimes take a bit of patience to work with
 
@@ -193,12 +210,16 @@ mylist = list(wahid_species_df = wahid_species,
           factor_heat_tol_factor = factor_heat_tol,
           hi.matrix.transformed.matrix = hi.matrix.transformed)
 
+class(hi.matrix.transformed)
+
 mylist$wahid_species_df
 mylist$factor_heat_tol_factor
 names(mylist)
 names(mylist) = c("species","heat","tests")
 mylist$tests
 class(mylist$tests)
+
+mylist$wahid_species_df
 
 #selecting elements from lists
 mylist[[2]]
@@ -218,6 +239,13 @@ getmode(mylist$tests)
 celciusTofahrenheit <- function(x){
   (x*9/5)+32
 }
+
+finalfunction <- function(p){
+  z = p+10
+  y = z + 100
+  print(y*34)
+}
+
 temps = c(23,32,45)
 (tempsF = celciusTofahrenheit(temps))
 

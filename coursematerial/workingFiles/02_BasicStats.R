@@ -10,11 +10,13 @@ wahid_species <- read.csv("https://epicpd.jshiny.com/jdata/epicpd/botswanaVS/cou
 # overview of Data
 str(wahid_outbreaks)
 summary(wahid_outbreaks)
+nrow(wahid_outbreaks)
 
 str(wahid_species)
 summary(wahid_species)
 
 unique(wahid_outbreaks$outbreakInfoId)
+length(unique(wahid_outbreaks$outbreakInfoId))
 
 # contingency tables handy to get an overview of data - but also to perform some statistics
 # goal in this case to to establish the species, diseases associated with them and outbreak status
@@ -69,9 +71,22 @@ multispecies.withoutcattle <- data.frame(oieReference = unique(subset(wahid_spec
     filter(n==1))
                             
 wahid_species.single <- subset(wahid_species, oieReference %in% wahid_species.single$oieReference) %>% 
-  mutate(classification = ifelse(spicieName == "Cattle", "singlespeciesWithCattle", "singlespeciesWithoutCattle"),
+  mutate(classification = ifelse(spicieName == "Cattle", 
+                                 "singlespeciesWithCattle", 
+                                 "singlespeciesWithoutCattle"),
          species = ifelse(spicieName == "Cattle", "Cattle", "non-Cattle")) %>% 
   select(oieReference, classification, species)
+
+#############DELETE ############
+testdataset <- wahid_species
+head(testdataset)
+unique(testdataset$spicieName)
+
+testdataset <- testdataset %>% mutate(newname4 = 
+                         ifelse(spicieName=="Cattle","Pearl",
+                                (ifelse(spicieName=="Goats","John","Kingdom"))))
+head(testdataset,15)
+################
 
 wahid_species.eval <- rbind(wahid_species.multi, wahid_species.single)
 nrow(wahid_species.eval)
@@ -88,6 +103,7 @@ wahid.eval <- merge(wahid_outbreaks, wahid_species.eval) %>%
 str(wahid.eval)
 wahid.eval$species <- factor(wahid.eval$species)
 str(wahid.eval)
+summary(wahid.eval$species)
 
 #2.2 -Exploratory Data Analysis - diseases and Cattle based association ####
 wahid.eval %>% dplyr::group_by(diseases, species) %>% tally()
@@ -97,10 +113,18 @@ subset(wahid.eval, diseases == "Foot and mouth disease virus (Inf. with) " & spe
 
 #2.2.1 Contingency tables in R ####
 table(wahid.eval$diseases, wahid.eval$species)
-wahid.eval <- wahid.eval %>% mutate(fmd = ifelse(diseases == "Foot and mouth disease virus (Inf. with) ", TRUE, FALSE))
+wahid.eval <- wahid.eval %>% 
+  mutate(fmd = ifelse(diseases == "Foot and mouth disease virus (Inf. with) ", TRUE, FALSE))
 table(wahid.eval$fmd, wahid.eval$species)
 prop.table(table(wahid.eval$fmd, wahid.eval$species))
 prop.table(table(wahid.eval$fmd, wahid.eval$species))*100
 prop.table(table(wahid.eval$fmd, wahid.eval$species), margin = 2)*100
 prop.table(table(wahid.eval$fmd, wahid.eval$species), margin = 1)*100
 
+prop.table(matrix(c(800, 25, 50, 125), 
+                  nrow = 2), 
+           margin = 2)
+
+prop.table(matrix(c(800, 25, 50, 125), 
+                  nrow = 2), 
+           margin = 1)
