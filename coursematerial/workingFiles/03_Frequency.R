@@ -224,12 +224,13 @@ wahid_outbreaks.FMD.prev<-epi.conf(as.matrix(cbind(wahid_outbreaks.FMD$totalNcas
          design = 1,
          N = 10000000) * 100 #here make the overarching population large
 
-head(wahid_outbreaks.FMD.prev) # the new dataset needs to be bound to the original 
+head(wahid_outbreaks.FMD.prev,10) # the new dataset needs to be bound to the original 
 
 wahid_outbreaks.FMD <- cbind(wahid_outbreaks.FMD,wahid_outbreaks.FMD.prev)
 wahid_outbreaks.FMD <- wahid_outbreaks.FMD[sort.list(wahid_outbreaks.FMD$est),] # sort the dataset by the prev estimate
 wahid_outbreaks.FMD$rank <- 1:nrow(wahid_outbreaks.FMD) #create a rank
 head(wahid_outbreaks.FMD)
+tail(wahid_outbreaks.FMD)
 
 #3.1.7.2 Plot results - Aside ####
 library(ggplot2)
@@ -267,8 +268,11 @@ baseSinglePlot + geom_point()
 baseSinglePlot + geom_quantile()
 
 #3.1.7.3 Data by year ####
-wahid_outbreaks.FMD$outbreakStartDate = as.POSIXct(wahid_outbreaks.FMD$outbreakStartDate, format = "%Y-%m-%d")
+class(wahid_outbreaks.FMD$outbreakStartDate)
+wahid_outbreaks.FMD$outbreakStartDate = as.POSIXct(wahid_outbreaks.FMD$outbreakStartDate, 
+                                                   format = "%Y-%m-%d")
 wahid_outbreaks.FMD$outbreakYear = format(wahid_outbreaks.FMD$outbreakStartDate, "%Y")
+class(wahid_outbreaks.FMD$outbreakYear)
 
 plot = ggplot(data = wahid_outbreaks.FMD, aes(x = rank, y = est)) +
   theme_bw() +
@@ -280,7 +284,7 @@ plot = ggplot(data = wahid_outbreaks.FMD, aes(x = rank, y = est)) +
   scale_y_continuous(limits = c(0,100), name = "Prevalence estimates (%)") + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-plot + facet_wrap(~outbreakYear)
+plot + facet_wrap(~spicieName)
 
 # another option
 plot.box = ggplot(data = wahid_outbreaks.FMD, aes(x = outbreakYear, y = est)) +
@@ -298,7 +302,8 @@ plot.box.long = ggplot(data = wahid_outbreaks.FMD, aes(x = as.integer(longitude)
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
   
 plot.box.long
-plot.box.long + facet_wrap(~as.integer(latitude), ncol = 1)
+plot.box.long + facet_wrap(~as.integer(latitude), ncol = 1) +
+  facet_wrap(~outbreakYear)
 
 plot.box.lat = ggplot(data = wahid_outbreaks.FMD, 
                       aes(x = as.integer(latitude), y = est, group = as.integer(latitude))) +
@@ -350,6 +355,7 @@ ggplot(wahid_outbreaks.epiCurve.plot,
            fill = as.factor(reportInfoId))) + 
   geom_col() + facet_wrap(~diseases)
 
+wahid_outbreaks.epiCurve$outbreakStartDate = as.Date(wahid_outbreaks.epiCurve$outbreakStartDate)
 
 ggplot() +
   theme_bw() +
@@ -367,6 +373,7 @@ ggplot(wahid_outbreaks.epiCurve, aes(x=outbreakStartDate, fill=diseases)) +
   stat_bin(binwidth=30, position="identity") + 
   scale_x_date(breaks=date_breaks(width="12 months"))
 
+
 ggplot(wahid_outbreaks.epiCurve.plot, aes(x=as.Date(yearmon), y=n, fill = diseases)) + 
   geom_bar(stat='identity') +
   labs(x="Case Month", y="Case Count") +
@@ -377,6 +384,9 @@ ggplot(wahid_outbreaks.epiCurve.plot, aes(x=as.Date(yearmon), y=n, fill = diseas
                name = "Date") + 
   theme(axis.text.x=element_text(angle=60, hjust=1),
         panel.grid = element_blank())
+
+
+
 
 
 

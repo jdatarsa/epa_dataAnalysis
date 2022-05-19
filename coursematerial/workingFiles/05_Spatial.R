@@ -22,6 +22,8 @@ str(df)
 summary(df)
 head(df)
 plot(df$eastings, df$southings)
+ggplot2::ggplot(data = df, aes(eastings, southings)) +
+  geom_point()
 
 #Rename the location variable to lon and lat
 # for terra when importing from data frame this naming is required
@@ -58,7 +60,7 @@ click(protectedAreas) #use Esc to exit
 
 masaiMara = protectedAreas[protectedAreas$AREANAME == 'Masai Mara', ]
 plot(masaiMara, col = "green", alpha = 0.3)
-plot(narok, col = "blue", alpha = 0.3, add = TRUE)
+plot(narok, col = "blue", alpha = 0.9, add = TRUE)
 
 #Do you notice the slight topology error? 
 #beyond the scope of this course: qGIS was used to correct this
@@ -99,6 +101,7 @@ cattleDensAfrica = terra::rast(paste0(baseURL,"/gis/rasters/densCattleAfrica.tif
 plot(cattleDensAfrica)
 plot(africa, add = TRUE)
 plot(ext(narok), add = TRUE)
+plot(geodata::gadm("Botswana", level=1, path="."), add = TRUE)
 
 # its quite difficult to work with raster data at the level of Africa - don't run the code but your computer may have
 # a hard time (1-2 minutes) when you run first the Narok plot and then overlay the raster
@@ -156,7 +159,8 @@ plot(narok)
 plot(b20, add = TRUE, col="green", alpha = 0.3)
 plot(b40, add = TRUE, col="blue", alpha = 0.3)
 plot(b60, add = TRUE, col="red", alpha = 0.3)
-
+plot(masaiMara, add = TRUE)
+plot(samplLoc, add = TRUE)
 
 #the issue however is they are not bands (so called multi-ring buffer) - so we'll need to cookie cutter them out
 b60 = erase(b60, b40)
@@ -185,6 +189,8 @@ str(samplLoc)
 sampLoc_region = merge(samplLoc, e, by.x=c('rowid'), by.y=c('id.y'))
 head(sampLoc_region)
 
+plot(samplLoc, add = TRUE)
+
 # establish if there are any missing classes - i.e. any points that were not within a buffer
 plot(sampLoc_region[is.na(sampLoc_region$class), ]) # there are
 nrow(sampLoc_region[is.na(sampLoc_region$class), ]) #a total of 6
@@ -202,11 +208,8 @@ head(sampLoc_region[sampLoc_region$study_str == 0,c("rowid","study_str","class")
 #lets set the class to 60 km then in the data
 sampLoc_region[is.na(sampLoc_region$class), ]$class <- "60km"
 
-plot(narok)
-plot(sampLoc_region, "class", col=rainbow(25), add = TRUE)
-plot(bAll, add = TRUE, "class", alpha = 0.3)
-
 # see the status of each point
+plot(narok)
 plot(sampLoc_region, "fmd_exp_st", col=c("green", "red"), add = TRUE)
 
 # can also evaluate plots side by side
@@ -238,6 +241,7 @@ sbar(d=50,
      divs = 4,
      below = "kilometers",
      xy = "bottom")
+plot(masaiMara, add = TRUE)
 
 # Aside: area of each raster cell - this will help with Density calculations
 res(cattleDensNarok) # ~ 100km ^2 - but this is not intuitive unless it was a projected coordinate system
@@ -245,6 +249,7 @@ cellSize(cattleDensNarok, unit="km", names="corrected")@ptr@.xData$range_min #mi
 head(values(cattleDensNarok))
 
 #Aside: Raster summary statistics
+plot(cattleDensNarok)
 global(cattleDensNarok, 'sum')
 global(cattleDensNarok, 'mean')
 
@@ -266,6 +271,7 @@ mean_bAllCattleCount <-
 
 bAll = merge(bAll, mean_bAllCattleCount, by.x=c('rowID'), by.y=c('ID'))
 head(bAll, 10)
+plot(bAll, "cattleCount")
 
 
 #you can now see the issue of limiting the buffer to Narok - any polygon cut-off by a human boundary becomes less valuable
@@ -283,7 +289,11 @@ head(bAll)
 plot(bAll, "density")
 
 #exercise - Allocate the cattle density for each region to the sampLoc_region Vector
+head(sampLoc_region)
+head(bAll)
 plot(sampLoc_region, add = TRUE)
+#Answer
+sampLoc_region_new3 = merge(sampLoc_region, e[, c(1, 6)], by.x=c('rowid'), by.y=c('id.y'))
 
 # 5.4 - example of rasterizing a vector ####
 sampLoc_regionRaster <- rasterize(sampLoc_region, cattleDensNarok, fun=sum) #number of points per cell
@@ -292,8 +302,9 @@ plot(sampLoc_region, "fmd_exp_st", col=c("green", "red"), add = TRUE, alpha = 0.
 
 # 5.5 Exporting data to add to spreadsheet data ####
 dfnew = cbind(sampLoc_region$rowid, df, cattleCount = sampLoc_region$cattleCellCount)
-write.csv(dfnew, "C:/Users/User/Desktop/temp.csv")
+write.csv(sampLoc_region_new3, "C:/Users/User/Desktop/temp.csv")
 
+head(sampLoc_region)
 # 5.6 Demo for qGIS ####
 # data we need to plot and try reproduce the map in Question ####
 

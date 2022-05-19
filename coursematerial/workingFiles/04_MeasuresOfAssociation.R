@@ -32,7 +32,8 @@ class(df$fmd_exp_st) # The outcome variable can also be changed to a factor for 
 df$fmd_exp_st = factor(df$fmd_exp_st, levels = c(1,0), labels = c("Dplus","Dminus"))
 (sex.assoc = table(df$anim_sex, df$fmd_exp_st))
 
-(sex.assoc.analysis <- epi.2by2(dat = sex.assoc, method = "cross.sectional", conf.level = 0.95, 
+(sex.assoc.analysis <- epi.2by2(dat = sex.assoc, 
+                                method = "cross.sectional", conf.level = 0.95, 
                       units = 100, interpret = TRUE, outcome = "as.columns"))
 
 
@@ -93,15 +94,29 @@ exp(glmer.zone.tab) #to get the Odd ratio instead of log odds
 # 4.2.3 repeat for two of the other variables in the model in Table 1 and present results
 
 #4.3 Chi squared tests of association ####
+temp = tempfile(fileext = ".xlsx")
+dataURL <- "https://epicpd.jshiny.com/jdata/epicpd/botswanaVS/coursematerial/tabular/nthiwa_kenya_seroprev.xlsx"
+download.file(dataURL, destfile=temp, mode='wb')
+df <- data.frame(readxl::read_excel(temp))
+
 df$anim_sex = factor(df$anim_sex, levels = c(1,0), labels =  c("female","male"))
 (prop.table(table(df$anim_sex)))
 df$fmd_exp_st = factor(df$fmd_exp_st, levels = c(1,0), labels = c("Dplus","Dminus"))
+sex.assoc = table(df$anim_sex, df$fmd_exp_st)
 
 #Same evaluation as before for the odds's ratio (this time male associated but for Chi Squared this doesn't matter) - Chi Squared analysis 
 # effect
 
 (sex.assoc.analysis <- epi.2by2(dat = sex.assoc, method = "cross.sectional", conf.level = 0.95, 
                                 units = 100, interpret = TRUE, outcome = "as.columns"))
+
+df$study_str_fct = factor(df$study_str, levels = c(0, 1, 2), labels = c("zone3", "zone2", "zone1"))
+str.assoc = table(df$study_str_fct, df$fmd_exp_st)
+stats::chisq.test(str.assoc)
+
+prop.table(table(df$herd_mgpr, df$anim_sex), margin = 1)
+
+stats::chisq.test(table(df$herd_mgpr, df$anim_sex))
 
 
 # 4.4 Multivariate analysis to look for associations controlling for other variables ####
@@ -113,17 +128,24 @@ df$study_str_fct = factor(df$study_str, levels = c(0, 1, 2), labels = c("zone3",
 df$anim_sex = factor(df$anim_sex, levels = c(0,1), labels = c("male","female")) 
 head(df)
 
+library(lme4)
+library(ggplot2)
+require(dplyr)
+
 # Note they used a stepwise  approach evaluating the model by adding and removing variables until left with significant variables
 # Beyond the scope of this course - except to say this technique is not considered the best anymore
 
 head(df)
 plyr::numcolwise(sum)(df) # quick way to sum all numeric columns (try colSums(df))
 #Now we can find the variables they used
-df.m = df %>% select(fmd_exp_st, hse_id, anim_sex, study_str_fct, herd_mgpr, mixcat_wpts)
+
+df.m = df %>% 
+  select(fmd_exp_st, hse_id, anim_sex, study_str_fct, herd_mgpr, mixcat_wpts)
 summary(df.m$anim_sex) #means its a factor
 summary(df.m$herd_mgpr) #this is not
 df.m$herd_mgpr = factor(df.m$herd_mgpr, levels = c(0,1), labels = c("sedentary","pastoral"))
 df.m$mixcat_wpts = factor(df.m$mixcat_wpts)
+summary(df.m$mixcat_wpts)
 str(df.m)
 
 glmer.mult = glmer(fmd_exp_st~anim_sex+study_str_fct+herd_mgpr+mixcat_wpts+(1|hse_id),
@@ -144,13 +166,29 @@ plot.df
 (plot.df$y_at = seq(1,nrow(plot.df),1))
 
 
-ggplot(data = plot.df, aes(x = Est, y = y_at)) +
+
+ggplot(data = plot.df, aes(x = Est, y = y_at, color = variable)) +
   geom_point() + 
-  geom_errorbarh(aes(xmax = UL, xmin = LL, height = 0.2)) + scale_y_continuous(breaks = plot.df$y_at, labels = plot.df$variable) +
+  geom_errorbarh(aes(xmax = UL, xmin = LL, height = 0.2)) + 
+  scale_y_continuous(breaks = plot.df$y_at, labels = plot.df$variable) +
   labs(x = "Odds ratio", y = "Variable") + 
   scale_x_continuous(breaks = seq(min(as.integer(plot.df$LL))-1, max(as.integer(plot.df$UL))+1, 1), 
                      limits = c(min(as.integer(plot.df$LL))-1, max(as.integer(plot.df$UL))+1)) + 
   geom_vline(xintercept = 1, lwd = 1) + 
-  coord_fixed(ratio = 2) + 
+  coord_fixed(ratio = 1) + 
   theme(axis.title.y = element_text(vjust = 0))+
   ggtitle("Multivarible analysis - Odd ratio's of non-reference variables")
+
+
+ggplot(data = plot.df, aes(x = Est, y = y_at)) +
+  geom_point(color = "blue") + 
+  geom_errorbarh(aes(xmax = UL, xmin = LL, height = 0.2), color = "blue") + 
+  scale_y_continuous(breaks = plot.df$y_at, labels = plot.df$variable) +
+  labs(x = "Odds ratio", y = "Variable") + 
+  scale_x_continuous(breaks = seq(min(as.integer(plot.df$LL))-1, max(as.integer(plot.df$UL))+1, 1), 
+                     limits = c(min(as.integer(plot.df$LL))-1, max(as.integer(plot.df$UL))+1)) + 
+  geom_vline(xintercept = 1, lwd = 1) + 
+  coord_fixed(ratio = 1) + 
+  theme(axis.title.y = element_text(vjust = 0))+
+  ggtitle("Multivarible analysis - Odd ratio's of non-reference variables")
+
