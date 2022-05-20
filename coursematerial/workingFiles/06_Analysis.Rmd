@@ -17,6 +17,9 @@ library(lme4)
 
 ```{r import_datasets, include=TRUE, echo = FALSE}
 df <- data.frame(readxl::read_excel("D:/OneDrive/jDATA/git/saehp-shiny-server/jdata/epicpd/botswanaVS/www/coursematerial/tabular/nthiwa_kenya_seroprev.xlsx"))
+
+# df <- df[1:100,]
+
 baseURL = "D:/OneDrive/jDATA/git/saehp-shiny-server/jdata/epicpd/botswanaVS/www/coursematerial"
 #Call generic functions
 source(paste0(baseURL,"/functions/01_functions.R"))
@@ -29,7 +32,7 @@ prev.overall = epi.prev(pos = sum(df$fmd_exp_st), tested = nrow(df),
 
 ## Results
 
-A total of `r nrow(df)` from `r length(unique(df$hse_id))` animals were were tested during the survey. Male animals made up `r 100- round(sum(df$anim_sex)/nrow(df)*100,2)`% of the population with the remaining `r round(sum(df$anim_sex)/nrow(df)*100,2)`% female. An average of `r mean(df %>% group_by(hse_id) %>% tally() %>% .$n)` animals were tested per herd.
+A total of `r nrow(df)` animals from `r length(unique(df$hse_id))` herds were tested during the survey. Male animals made up `r 100- round(sum(df$anim_sex)/nrow(df)*100,2)`% of the population with the remaining `r round(sum(df$anim_sex)/nrow(df)*100,2)`% female. An average of `r mean(df %>% group_by(hse_id) %>% tally() %>% .$n)` animals were tested per herd.
 
 ### Prevalence
 

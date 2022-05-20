@@ -1,0 +1,48 @@
+---
+title: 'Botswana FMD reporting to the OIE: 2005 - 2022'
+author: "Botswana Vet Services"
+date: "20/05/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(terra)
+require(dplyr)
+
+df <- read.csv("https://epicpd.jshiny.com/jdata/epicpd/botswanaVS/coursematerial/tabular/wahid_botswana_outbreaklevel.csv")
+
+df = subset(df, subset = diseases == "Foot and mouth disease virus (Inf. with) ")
+df$diseases = factor(df$diseases)
+levels(df$diseases) <-  "FMD"
+
+baseURL = "https://epicpd.jshiny.com/jdata/epicpd/botswanaVS/coursematerial"
+source(paste0(baseURL,"/functions/01_functions.R"))
+botswana = importShapefilesOnline(filePlusExt = "botswanaFMDControl.zip")
+
+```
+
+## Map of the reported cases
+
+
+```{r mapsetup, include=TRUE, echo = FALSE}
+colnames(df)[12] <- "lat"
+colnames(df)[13] <- "lon"
+df.map = terra::vect(df,  crs="+proj=longlat +datum=WGS84")
+
+plot(botswana, "class", col = c("green", "pink"))
+plot(df.map, col=c("red"), add = TRUE)
+```
+
+## Table of the reporting status of FMD outbreaks
+
+```{r tablesetup, include=TRUE, echo = FALSE}
+df.status = df %>% group_by(eventStatus) %>% tally()
+df.status = data.frame(df.status)
+colnames(df.status) <- c("OIE Event status","Total")
+knitr::kable(df.status, 
+             caption = "OIE based event status of all Botswana FMD outbreaks since 2005",
+             format = "html", table.attr = "style='width:30%;'"
+             )
+```
+

@@ -1,0 +1,51 @@
+---
+title: "Pearl's amazing Report"
+author: "Botswana Vet Services"
+date: "20/05/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(dplyr)
+library(terra)
+df <- read_excel("C:/Users/User/Desktop/dataset.xlsx")
+require(dplyr)
+df.prev = df %>% group_by(year, month, distr) %>% 
+             dplyr::summarise(totalChecks = n()) %>% 
+  arrange(year, distr, month)
+botswana = geodata::gadm("Botswana", level=1, path=".")
+
+df.totalChecks = data.frame(df.prev %>% group_by(distr) %>% summarise(totalChecksOverall = sum(totalChecks)))
+
+
+chlorpleth = merge(botswana, df.totalChecks, by.x=c('NAME_1'), by.y=c('distr'))
+
+
+
+```
+
+# Overview
+
+Our dataset contains `r length(unique(df$year))` year/s worth of data consisting of `r length(unique(df$month))` different months. These data relate to `r length(unique(df$facility))` different facilities in `r length(unique(df$subDistr))` different subdistricts in `r length(unique(df$distr))` main districts.
+
+# Results
+```{r, prev, include=TRUE, echo = FALSE}
+knitr::kable(df.prev, 
+             caption = "Number of reports by district, year and month",
+             format = "html", table.attr = "style='width:50%;'"
+             )
+```
+
+```{r, map, include=TRUE, echo = FALSE}
+plot(botswana)
+click(botswana)
+plot(chlorpleth, "totalChecksOverall", add = TRUE)
+```
+
+### Overview of prevalence
+
+
+
+

@@ -7,9 +7,42 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
 ```
 
+```{r johnsChunck, include = TRUE, echo = FALSE}
+ggplot(data = cars, aes(x = speed)) + 
+        geom_boxplot() +
+  ggtitle("Hello this is a plot")
+```
+
+
 ## R Markdown introduction
+
+## heading 
+
+hadskfhkjlasdhfsdaf
+
+**bold**
+
+*this is italics text*
+
+***this is italics and bold text***
+
+What is 1 + 1?
+The answer is `r 1+1`
+
+1.  This is item 1
+1.  This is item 2
+
+
+
+
+
+*  List 1
+*  List 2
+
+[This is google](https://www.google.com)
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
